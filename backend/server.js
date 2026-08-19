@@ -14,7 +14,11 @@ app.use(express.json());
 
 connectDB();
 
-app.use("/api/User", userRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/user", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 
