@@ -28,7 +28,7 @@ const getAllUsers = async () => {
     catch (error){
         throw new Error("Error retrieving users: " + error.message);
     }
-}
+};
 
 const getUserById = async (id) => {
     try{
@@ -42,7 +42,7 @@ const getUserById = async (id) => {
         throw new Error("Error retrieving user: " + error.message);     
 
     }
-}
+};
 
 const updateUser = async (id, updateData) =>
 {
@@ -56,10 +56,6 @@ const updateUser = async (id, updateData) =>
     {
         user.userid = updateData.userid;
     }
-    if(updateData.password)
-    {
-        user.password = updateData.password;
-    }
     if(updateData.name)
     {
         user.name = updateData.name;
@@ -68,19 +64,22 @@ const updateUser = async (id, updateData) =>
     {
         user.email = updateData.email;
     }
+    if(updateData.password)
+    {
+        user.password = updateData.password;
+    }
     if(updateData.phone_no)
     {
         user.phone_no = updateData.phone_no;
     }
- 
-    const updateUser= await user.save();
-    return updateUser.toJSON();
+    await user.save();
+    return user.toJSON();
 }
 catch (error)
 {
     throw new Error("Error updating user: " + error.message);
 }
-}
+};
 
 const deleteUser = async (id) => {
     try{
@@ -98,7 +97,7 @@ const deleteUser = async (id) => {
     {
         throw new Error("Error deleting user: " + error.message);
     }
-}
+};
 module.exports = {
     createUser,
     getAllUsers,
