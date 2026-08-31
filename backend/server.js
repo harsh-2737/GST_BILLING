@@ -6,6 +6,7 @@ const connectDB = require("./config/db");
 const userRoutes = require("./routes/UserRoutes");
 const gstRoutes = require("./routes/GSTRoutes");
 const customerRoutes = require("./routes/CustomerRoutes");
+const productRoutes = require("./routes/Productroutes");
 dotenv.config();
 
 const app = express();
@@ -19,6 +20,7 @@ connectDB();
 app.use("/api/users", userRoutes);
 app.use("/api/gsts", gstRoutes);
 app.use("/api/customers", customerRoutes);
+app.use("/api/products",productRoutes);
 
 const PORT = process.env.PORT || 5000;
 

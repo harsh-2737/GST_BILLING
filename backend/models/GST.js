@@ -1,6 +1,6 @@
-const moongose = require("mongoose");
+const mongoose = require("mongoose");
 
-const gstSchema = new moongose.Schema({
+const gstSchema = new mongoose.Schema({
     gstid: {
         type: String,
         required: true,
@@ -25,5 +25,5 @@ const gstSchema = new moongose.Schema({
     {
     collection: "GST"
     });
-const GST = moongose.model("GST", gstSchema);
+const GST = mongoose.model("GST", gstSchema);
  module.exports=GST;
