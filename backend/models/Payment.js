@@ -3,7 +3,7 @@ const paymentschema = new mongoose.Schema(
     {
         paymentid:
         {
-            type:number,
+            type:Number,
             required:true
         },
         paymentstatus:
@@ -22,7 +22,7 @@ const paymentschema = new mongoose.Schema(
         },
         paymentamount:
         {
-            type:number,
+            type:Number,
             required:true
         }
     },
