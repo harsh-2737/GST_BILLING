@@ -6,6 +6,12 @@ const paymentschema = new mongoose.Schema(
             type:Number,
             required:true
         },
+        invoiceid:
+        {
+            type:String,
+            required:true,
+            ref:"Invoice"
+        },
         paymentstatus:
         {
             type:String

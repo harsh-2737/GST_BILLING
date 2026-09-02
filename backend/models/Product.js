@@ -26,6 +26,12 @@ const productSchema = new mongoose.Schema(
         {
             type:String,
             required:true
+        },
+        gstid:
+        {
+            type:String,
+            required:true,
+            ref:"GST"
         }
     },
     {

@@ -8,6 +8,7 @@ const gstRoutes = require("./routes/GSTRoutes");
 const customerRoutes = require("./routes/CustomerRoutes");
 const productRoutes = require("./routes/ProductRoutes");
 const paymentRoutes = require("./routes/PaymentRoutes");
+const invoiceRoutes = require("./routes/InvoiceRoutes");
 
 dotenv.config();
 
@@ -24,7 +25,7 @@ app.use("/api/gsts", gstRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/products",productRoutes);
 app.use("/api/payments",paymentRoutes);
-
+app.use("/api/invoices",invoiceRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
