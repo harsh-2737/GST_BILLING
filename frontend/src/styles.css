@@ -84,9 +84,6 @@ button { color: inherit; }
 .breadcrumb strong { color: #36423c; font-weight: 600; }
 .breadcrumb-slash { color: #c3cbc5; }
 .topbar-actions { gap: 16px; color: #77827c; }
-.icon-button { position: relative; display: grid; width: 32px; height: 32px; place-items: center; border: 0; border-radius: 5px; background: transparent; cursor: pointer; }
-.icon-button:hover { background: #f0f4f0; }
-.notification-dot { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: #df704f; }
 .topbar-divider { width: 1px; height: 22px; background: var(--line); }
 .today-label { font-size: 11px; }
 .page-content { width: min(1180px, 100%); margin: 0 auto; padding: 38px 42px 24px; }

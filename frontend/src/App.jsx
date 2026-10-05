@@ -3,10 +3,8 @@ import {
   ArrowDownToLine,
   ArrowUpRight,
   BadgeCheck,
-  Bell,
   CalendarDays,
   Building2,
-  ChevronDown,
   Download,
   FilePlus2,
   FileText,
@@ -603,7 +601,6 @@ function App() {
         <div className="workspace-switcher">
           <span className="workspace-avatar">{session.user?.businessName?.charAt(0)?.toUpperCase() || "B"}</span>
           <span className="workspace-copy"><strong>{session.user?.businessName || "Your business"}</strong><small>Business account</small></span>
-          <ChevronDown size={16} />
         </div>
 
         <p className="nav-label">WORKSPACE</p>
@@ -619,7 +616,6 @@ function App() {
           <div className="profile-row">
             <span className="profile-avatar">AO</span>
             <span className="workspace-copy"><strong>{session.user?.name || "Account owner"}</strong><small>{session.user?.email || "Owner"}</small></span>
-            <ChevronDown size={16} />
           </div>
         </div>
       </aside>
@@ -629,7 +625,6 @@ function App() {
           <div className="breadcrumb"><span>Workspace</span><span className="breadcrumb-slash">/</span><strong>{activeView.charAt(0).toUpperCase() + activeView.slice(1)}</strong></div>
           <div className="topbar-actions">
             <button className="topbar-logout" onClick={handleLogout} aria-label="Log out" title="Log out"><LogOut size={17} /><span>Log out</span></button>
-            <button className="icon-button" aria-label="Notifications"><Bell size={18} /><span className="notification-dot" /></button>
             <span className="topbar-divider" />
             <span className="today-label">{new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(new Date())}</span>
           </div>
