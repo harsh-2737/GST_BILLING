@@ -201,6 +201,11 @@ td { height: 57px; padding: 0 16px; border-top: 1px solid #f0f2ef; font-size: 11
 .status-paid { color: #26734e; background: #eaf5ee; }
 .status-pending { color: #a56d2d; background: #fbf2e5; }
 .status-overdue { color: #b24f44; background: #fbedeb; }
+.status-failed { color: #a64136; background: #fbefed; }
+.status-refunded { color: #536d7a; background: #edf3f5; }
+.invoice-status-controls { display: flex; align-items: center; gap: 8px; }
+.payment-status-select { min-width: 91px; height: 28px; padding: 0 5px; border: 1px solid #dfe6e0; border-radius: 4px; color: #445149; background: #fff; font-size: 10px; }
+.payment-status-select:disabled { opacity: .6; cursor: wait; }
 .row-action { display: grid; width: 27px; height: 27px; place-items: center; border: 0; border-radius: 4px; color: #8a958f; background: transparent; cursor: pointer; }
 .row-action:hover { color: #187352; background: #edf4ef; }
 .customer-row-actions { gap: 4px; }

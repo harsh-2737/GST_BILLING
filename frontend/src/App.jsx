@@ -28,7 +28,7 @@ import CustomerPage from "./CustomerPage.jsx";
 import ProductPage, { ProductForm } from "./ProductPage.jsx";
 import { readApiResponse } from "./api.js";
 
-const filters = ["All invoices", "Paid", "Pending", "Overdue"];
+const filters = ["All invoices", "Paid", "Pending", "Overdue", "Failed", "Refunded"];
 
 function formatCurrency(amount) {
   return new Intl.NumberFormat("en-IN", {
@@ -55,11 +55,11 @@ function getGreeting() {
 }
 
 function getStatus(invoice) {
-  if (invoice.status === "Paid" || invoice.payment?.paymentstatus === "Paid") {
-    return "Paid";
-  }
+  const paymentStatus = invoice.payment?.paymentstatus;
+  if (paymentStatus && paymentStatus !== "Pending") return paymentStatus;
   if (invoice.status === "Overdue") return "Overdue";
-  return "Pending";
+  if (paymentStatus) return paymentStatus;
+  return invoice.status === "Paid" ? "Paid" : "Pending";
 }
 
 function AuthScreen({ onAuthenticated }) {
@@ -419,6 +419,8 @@ function App() {
   const [query, setQuery] = useState("");
   const [showInvoiceComposer, setShowInvoiceComposer] = useState(false);
   const [downloadError, setDownloadError] = useState("");
+  const [paymentUpdateError, setPaymentUpdateError] = useState("");
+  const [updatingPaymentInvoiceId, setUpdatingPaymentInvoiceId] = useState(null);
 
   useEffect(() => {
     if (!session?.token) {
@@ -547,6 +549,31 @@ function App() {
     navigate("invoices");
   }
 
+  async function handlePaymentStatusUpdate(invoice, paymentstatus) {
+    if (paymentstatus === (invoice.payment?.paymentstatus || "Pending")) return;
+
+    setUpdatingPaymentInvoiceId(invoice.invoiceid);
+    setPaymentUpdateError("");
+    try {
+      const response = await fetch(`/api/invoices/update/${invoice.invoiceid}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.token}`,
+        },
+        body: JSON.stringify({ payment: { paymentstatus } }),
+      });
+      const result = await readApiResponse(response);
+      if (!response.ok) throw new Error(result.message || result.error || "Could not update payment status.");
+      if (!result.data?.invoice) throw new Error("The server returned an invalid invoice update.");
+      setInvoices((current) => current.map((item) => item.invoiceid === invoice.invoiceid ? result.data.invoice : item));
+    } catch (updateError) {
+      setPaymentUpdateError(updateError.message || "Could not update payment status.");
+    } finally {
+      setUpdatingPaymentInvoiceId(null);
+    }
+  }
+
   async function handleDownloadInvoice(invoice) {
     try {
       const { downloadInvoicePdf } = await import("./invoicePdf.js");
@@ -660,6 +687,7 @@ function App() {
               <label className="search-field"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search invoices" aria-label="Search invoices" /></label>
             </div>
             {downloadError && <p className="auth-error product-page-error" role="alert">{downloadError}</p>}
+            {paymentUpdateError && <p className="auth-error product-page-error" role="alert">{paymentUpdateError}</p>}
 
             <div className="table-wrap">
               <table>
@@ -676,7 +704,7 @@ function App() {
                         <td><span className="customer-name">{invoice.customer?.name || "Unknown customer"}</span></td>
                         <td className="date-cell">{formatDate(invoice.invoicedate)}</td>
                         <td className="amount-cell">{formatCurrency(invoice.totalamount)}</td>
-                        <td><span className={`status-pill status-${status.toLowerCase()}`}><span />{status}</span></td>
+                        <td><div className="invoice-status-controls"><span className={`status-pill status-${status.toLowerCase()}`}><span />{status}</span><select className="payment-status-select" aria-label={`Update payment status for invoice ${invoice.invoiceid}`} value={invoice.payment?.paymentstatus || "Pending"} onChange={(event) => handlePaymentStatusUpdate(invoice, event.target.value)} disabled={updatingPaymentInvoiceId === invoice.invoiceid}><option value="Pending">Pending</option><option value="Paid">Paid</option><option value="Failed">Failed</option><option value="Refunded">Refunded</option></select></div></td>
                         <td><button className="row-action" onClick={() => handleDownloadInvoice(invoice)} aria-label={`Download invoice ${invoice.invoiceid} as PDF`} title="Download PDF"><Download size={16} /></button></td>
                       </tr>
                     );

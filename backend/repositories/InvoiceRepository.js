@@ -1803,6 +1803,14 @@ const updateInvoice = async (
         ) {
             invoice.payment.paymentamount =
                 invoice.totalamount;
+
+            if (invoice.payment.paymentstatus === "Paid") {
+                invoice.status = "Paid";
+            } else if (invoice.payment.paymentstatus === "Refunded") {
+                invoice.status = "Overdue";
+            } else if (["Pending", "Failed"].includes(invoice.payment.paymentstatus)) {
+                invoice.status = "Draft";
+            }
         }
 
         await invoice.save();
