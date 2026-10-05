@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
-import { ArrowUpRight, Boxes, Plus, Trash2, X } from "lucide-react";
+import { ArrowUpRight, Boxes, Pencil, Plus, Trash2, X } from "lucide-react";
 import { readApiResponse } from "./api.js";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(Number(value) || 0);
 }
 
-export function ProductForm({ token, onClose, onCreated }) {
-  const [form, setForm] = useState({ productname: "", quantity: "", price: "", hsncode: "", gstrate: "18" });
+export function ProductForm({ token, onClose, onSaved, product }) {
+  const isEditing = Boolean(product);
+  const [form, setForm] = useState(() => product ? {
+    productname: product.productname || "",
+    quantity: String(product.quantity ?? ""),
+    price: String(product.price ?? ""),
+    hsncode: product.hsncode || "",
+    gstrate: String(product.gst?.gstrate ?? "18"),
+  } : { productname: "", quantity: "", price: "", hsncode: "", gstrate: "18" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,8 +28,8 @@ export function ProductForm({ token, onClose, onCreated }) {
     setError("");
 
     try {
-      const response = await fetch("/api/products/create", {
-        method: "POST",
+      const response = await fetch(isEditing ? `/api/products/update/${product.productid}` : "/api/products/create", {
+        method: isEditing ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -37,7 +44,7 @@ export function ProductForm({ token, onClose, onCreated }) {
       });
       const result = await readApiResponse(response);
       if (!response.ok) throw new Error(result.message || result.error || "Could not add product.");
-      onCreated(result);
+      onSaved(result);
     } catch (submitError) {
       setError(submitError.message || "Could not add product.");
     } finally {
@@ -49,7 +56,7 @@ export function ProductForm({ token, onClose, onCreated }) {
     <div className="entity-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="entity-modal" role="dialog" aria-modal="true" aria-labelledby="product-form-title">
         <header className="entity-modal-heading">
-          <div><p className="eyebrow">INVENTORY</p><h2 id="product-form-title">Add product</h2><p>Set the price, available stock, and total GST rate.</p></div>
+          <div><p className="eyebrow">INVENTORY</p><h2 id="product-form-title">{isEditing ? "Edit product" : "Add product"}</h2><p>Set the price, available stock, and total GST rate.</p></div>
           <button className="icon-button" onClick={onClose} aria-label="Close product form"><X size={19} /></button>
         </header>
         <form className="entity-form" onSubmit={submitProduct}>
@@ -63,7 +70,7 @@ export function ProductForm({ token, onClose, onCreated }) {
             <label className="auth-field"><span>GST rate</span><span className="auth-input-wrap"><select name="gstrate" value={form.gstrate} onChange={updateField}><option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></span></label>
           </div>
           {error && <p className="auth-error" role="alert">{error}</p>}
-          <footer className="entity-modal-footer"><button className="secondary-button" type="button" onClick={onClose}>Cancel</button><button className="primary-button" type="submit" disabled={submitting}>{submitting ? "Saving…" : "Add product"}<ArrowUpRight size={16} /></button></footer>
+          <footer className="entity-modal-footer"><button className="secondary-button" type="button" onClick={onClose}>Cancel</button><button className="primary-button" type="submit" disabled={submitting}>{submitting ? "Saving…" : isEditing ? "Save changes" : "Add product"}<ArrowUpRight size={16} /></button></footer>
         </form>
       </section>
     </div>
@@ -75,6 +82,7 @@ export default function ProductPage({ token }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [deletingProductId, setDeletingProductId] = useState(null);
 
   useEffect(() => {
@@ -91,11 +99,18 @@ export default function ProductPage({ token }) {
     return () => { active = false; };
   }, [token]);
 
-  function addProduct(product) {
-    if (Number(product.quantity) > 0 && !product.archived) {
+  function saveProduct(product) {
+    if (editingProduct) {
+      if (Number(product.quantity) > 0 && !product.archived) {
+        setProducts((current) => current.map((item) => item.productid === product.productid ? product : item));
+      } else {
+        setProducts((current) => current.filter((item) => item.productid !== product.productid));
+      }
+    } else if (Number(product.quantity) > 0 && !product.archived) {
       setProducts((current) => [...current, product]);
     }
     setShowForm(false);
+    setEditingProduct(null);
   }
 
   async function deleteProduct(product) {
@@ -122,7 +137,7 @@ export default function ProductPage({ token }) {
     <div className="page-content">
       <section className="page-heading">
         <div><p className="eyebrow">INVENTORY</p><h1>Products<span>.</span></h1><p className="heading-subtitle">Manage what you sell, stock levels, and GST rates.</p></div>
-        <button className="primary-button" onClick={() => setShowForm(true)}><Plus size={17} />Add product</button>
+        <button className="primary-button" onClick={() => { setEditingProduct(null); setShowForm(true); }}><Plus size={17} />Add product</button>
       </section>
       <section className="invoice-section entity-list-section">
         <div className="section-heading"><div><h2>All products</h2><p>{products.length} listed {products.length === 1 ? "product" : "products"}</p></div></div>
@@ -131,11 +146,11 @@ export default function ProductPage({ token }) {
           {loading && <tr><td className="table-message" colSpan="6">Loading products…</td></tr>}
           {!loading && error && products.length === 0 && <tr><td className="table-message error-message" colSpan="6">{error}</td></tr>}
           {!loading && !error && products.length === 0 && <tr><td className="table-message" colSpan="6">No products yet. Add a product to use it on invoices.</td></tr>}
-          {!loading && products.map((product) => <tr key={product.productid}><td><span className="customer-name">{product.productname}</span></td><td className="date-cell">{product.hsncode}</td><td className="amount-cell">{formatCurrency(product.price)}</td><td className="date-cell">{product.gst?.gsttype === "CGST+SGST" ? `CGST ${Number(product.gst.gstrate) / 2}% + SGST ${Number(product.gst.gstrate) / 2}%` : `${product.gst?.gsttype} · ${product.gst?.gstrate}%`}</td><td><span className={Number(product.quantity) < 1 ? "stock-empty" : "date-cell"}>{product.quantity}</span></td><td><button className="delete-product-button" onClick={() => deleteProduct(product)} disabled={deletingProductId === product.productid} aria-label={`Delete ${product.productname}`} title="Delete product">{deletingProductId === product.productid ? "…" : <Trash2 size={16} />}</button></td></tr>)}
+          {!loading && products.map((product) => <tr key={product.productid}><td><span className="customer-name">{product.productname}</span></td><td className="date-cell">{product.hsncode}</td><td className="amount-cell">{formatCurrency(product.price)}</td><td className="date-cell">{product.gst?.gsttype === "CGST+SGST" ? `CGST ${Number(product.gst.gstrate) / 2}% + SGST ${Number(product.gst.gstrate) / 2}%` : `${product.gst?.gsttype} · ${product.gst?.gstrate}%`}</td><td><span className={Number(product.quantity) < 1 ? "stock-empty" : "date-cell"}>{product.quantity}</span></td><td><div className="invoice-item-actions customer-row-actions"><button className="row-action" onClick={() => { setEditingProduct(product); setShowForm(true); }} aria-label={`Edit ${product.productname}`} title="Edit product"><Pencil size={15} /></button><button className="delete-product-button" onClick={() => deleteProduct(product)} disabled={deletingProductId !== null} aria-label={`Delete ${product.productname}`} title="Delete product">{deletingProductId === product.productid ? "…" : <Trash2 size={16} />}</button></div></td></tr>)}
         </tbody></table></div>
         <div className="table-footer"><span>Showing {products.length} products</span><span>Amounts in INR</span></div>
       </section>
-      {showForm && <ProductForm token={token} onClose={() => setShowForm(false)} onCreated={addProduct} />}
+      {showForm && <ProductForm token={token} product={editingProduct} onClose={() => { setShowForm(false); setEditingProduct(null); }} onSaved={saveProduct} />}
     </div>
   );
 }

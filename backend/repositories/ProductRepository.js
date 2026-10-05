@@ -161,7 +161,7 @@ const getProductById = async (id, ownerid) => {
 
 const updateProduct = async (id, updateData, ownerid) => {
     try {
-        const product = await Product.findOneAndDelete({
+        const product = await Product.findOne({
             productid: Number(id),
             ownerid: Number(ownerid)
         });
@@ -218,7 +218,7 @@ const updateProduct = async (id, updateData, ownerid) => {
 
 const deleteProduct = async (id, ownerid) => {
     try {
-        const product = await Product.findOne({
+        const product = await Product.findOneAndDelete({
             productid: Number(id),
             ownerid: Number(ownerid)
         });
