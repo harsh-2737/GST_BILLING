@@ -392,7 +392,7 @@ function InvoiceComposer({ token, user, onClose, onCreated, onNavigateTo }) {
           </form>
         )}
       </section>
-      {showProductForm && <ProductForm token={token} onClose={() => setShowProductForm(false)} onCreated={addProductToInvoice} />}
+      {showProductForm && <ProductForm token={token} onClose={() => setShowProductForm(false)} onSaved={addProductToInvoice} />}
     </div>
   );
 }

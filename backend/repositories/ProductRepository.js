@@ -1,18 +1,35 @@
 const Product = require("../models/Product");
 const GST = require("../models/GST");
 const Counter = require("../models/Counter");
+const { resolveNextProductId } = require("../utils/productId");
 
-const getNextProductId = async () => {
+const syncProductCounter = async () => {
+    const latestProduct = await Product.findOne({}).sort({ productid: -1 }).select("productid").lean();
+    const maxProductId = Number(latestProduct?.productid ?? 0);
+
     const counter = await Counter.findOneAndUpdate(
         { _id: "productid" },
-        { $inc: { seq: 1 } },
-        {
-            new: true,
-            upsert: true
-        }
+        { $set: { seq: maxProductId } },
+        { new: true, upsert: true }
     );
 
-    return counter.seq;
+    return Number(counter?.seq ?? maxProductId);
+};
+
+const getNextProductId = async () => {
+    const counter = await Counter.findOne({ _id: "productid" }).lean();
+    const currentSeq = Number(counter?.seq ?? 0);
+    const latestProduct = await Product.findOne({}).sort({ productid: -1 }).select("productid").lean();
+    const maxProductId = Number(latestProduct?.productid ?? 0);
+    const nextProductId = resolveNextProductId(currentSeq, maxProductId);
+
+    const updatedCounter = await Counter.findOneAndUpdate(
+        { _id: "productid" },
+        { $set: { seq: nextProductId } },
+        { new: true, upsert: true }
+    );
+
+    return Number(updatedCounter?.seq ?? nextProductId);
 };
 
 const getNextGSTId = async () => {
@@ -74,50 +91,56 @@ const getOrCreateGST = async (gstData) => {
 };
 
 const createProduct = async (productdata) => {
-    try {
-        if (
-            !productdata.productname ||
-            productdata.quantity === undefined ||
-            productdata.price === undefined ||
-            !productdata.hsncode ||
-            !productdata.gst
-        ) {
-            throw new Error("Missing Required fields");
-        }
-
-        const gst = await getOrCreateGST(productdata.gst);
-
-        const productid = await getNextProductId();
-
-        const product = await Product.create({
-            productid: productid,
-
-            productname: productdata.productname,
-
-            price: productdata.price,
-
-            hsncode: productdata.hsncode,
-
-            quantity: productdata.quantity,
-            ownerid: Number(productdata.ownerid),
-            archived: Number(productdata.quantity) <= 0,
-
-            gst: {
-                gstid: gst.gstid,
-                gsttype: gst.gsttype,
-                gstrate: gst.gstrate,
-                gstin: gst.gstin
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+            if (
+                !productdata.productname ||
+                productdata.quantity === undefined ||
+                productdata.price === undefined ||
+                !productdata.hsncode ||
+                !productdata.gst
+            ) {
+                throw new Error("Missing Required fields");
             }
-        });
 
-        return product.toJSON();
+            const gst = await getOrCreateGST(productdata.gst);
+            const productid = await getNextProductId();
 
+            const product = await Product.create({
+                productid: productid,
+
+                productname: productdata.productname,
+
+                price: productdata.price,
+
+                hsncode: productdata.hsncode,
+
+                quantity: productdata.quantity,
+                ownerid: Number(productdata.ownerid),
+                archived: Number(productdata.quantity) <= 0,
+
+                gst: {
+                    gstid: gst.gstid,
+                    gsttype: gst.gsttype,
+                    gstrate: gst.gstrate,
+                    gstin: gst.gstin
+                }
+            });
+
+            return product.toJSON();
+        }
+        catch (error) {
+            const isDuplicateProductId = error && error.code === 11000 && /productid/i.test(error.message || "");
+
+            if (!isDuplicateProductId) {
+                throw new Error("Error creating product: " + error.message);
+            }
+
+            await syncProductCounter();
+        }
     }
-    catch (error) {
-        throw new Error(
-            "Error creating product: " + error.message
-        );
-    }
+
+    throw new Error("Error creating product: duplicate product ID after retry");
 };
 
 const getAllProducts = async (ownerid) => {

@@ -6,8 +6,9 @@ function formatCurrency(value) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(Number(value) || 0);
 }
 
-export function ProductForm({ token, onClose, onSaved, product }) {
+export function ProductForm({ token, onClose, onSaved, onCreated, product }) {
   const isEditing = Boolean(product);
+  const saveHandler = typeof onSaved === "function" ? onSaved : onCreated;
   const [form, setForm] = useState(() => product ? {
     productname: product.productname || "",
     quantity: String(product.quantity ?? ""),
@@ -44,7 +45,9 @@ export function ProductForm({ token, onClose, onSaved, product }) {
       });
       const result = await readApiResponse(response);
       if (!response.ok) throw new Error(result.message || result.error || "Could not add product.");
-      onSaved(result);
+      if (typeof saveHandler === "function") {
+        saveHandler(result);
+      }
     } catch (submitError) {
       setError(submitError.message || "Could not add product.");
     } finally {
