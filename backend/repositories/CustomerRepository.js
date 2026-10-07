@@ -1,6 +1,12 @@
 const Customer = require("../models/Customer");
 const Counter = require("../models/Counter");
 
+const normalizeOptionalGSTIN = (gstin) => {
+    if (gstin === undefined || gstin === null) return undefined;
+    const trimmed = String(gstin).trim();
+    return trimmed ? trimmed.toUpperCase() : undefined;
+};
+
 const getNextCustomerId = async () => {
 
     const counter = await Counter.findOneAndUpdate(
@@ -54,7 +60,7 @@ const createCustomer = async (customerData) => {
             name: customerData.name,
             email: customerData.email,
             phone_no: customerData.phone_no,
-            gstin: customerData.gstin,
+            gstin: normalizeOptionalGSTIN(customerData.gstin),
             address: customerData.address
         });
 
@@ -186,7 +192,7 @@ const updateCustomer = async (id, updateData, ownerid) => {
 
         if (updateData.gstin !== undefined) {
 
-            customer.gstin = updateData.gstin;
+            customer.gstin = normalizeOptionalGSTIN(updateData.gstin);
 
         }
 

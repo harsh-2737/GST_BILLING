@@ -2,9 +2,9 @@ const CustomerRepository = require("../repositories/CustomerRepository");
 
 const createCustomer = async (req, res) => {
 
-    if (!req.body.gstin || !req.body.address) {
+    if (!req.body.address) {
         return res.status(400).json({
-            error: "Customer GSTIN and address are required"
+            error: "Customer address is required"
         });
     }
 
