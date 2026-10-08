@@ -1,13 +1,7 @@
-const ProductRepository = require('../repositories/ProductRepository');
+const ProductRepository = require("../repositories/ProductRepository");
 
-const createProduct = async (req,res) =>
-
-{
-
-    try
-
-    {
-
+const createProduct = async (req, res) => {
+    try {
         const productData = {
             ...req.body,
             ownerid: req.user.userid,
@@ -18,76 +12,48 @@ const createProduct = async (req,res) =>
             }
         };
 
-        const product= await ProductRepository.createProduct(productData);
-
+        const product = await ProductRepository.createProduct(productData);
         res.status(201).json(product);
-
-    }
-
-    catch(error)
-
-    {
-
+    } catch (error) {
         res.status(400).json({
-
-            message: error.message
-
+            message: error.message,
+            error: error.message
         });
-
     }
-
 };
 
-const getAllProducts = async (req,res)=> {
-
-    try{
-
+const getAllProducts = async (req, res) => {
+    try {
         const products = await ProductRepository.getAllProducts(req.user.userid);
-
         res.status(200).json(products);
-
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+            error: error.message
+        });
     }
-
-    catch(error){
-
-        res.status(500).json({error: error.message});
-
-    }
-
 };
 
-const getProductById = async (req,res)=>{
-
-    try{
-
+const getProductById = async (req, res) => {
+    try {
         const product = await ProductRepository.getProductById(req.params.id, req.user.userid);
-
         if (!product) {
-
             return res.status(404).json({
+                message: "Product not found",
                 error: "Product not found"
             });
-
         }
-
         res.status(200).json(product);
-
+    } catch (error) {
+        res.status(404).json({
+            message: error.message,
+            error: error.message
+        });
     }
-
-    catch(error){
-
-        res.status(404).json({error:error.message});
-
-    }
-
 };
 
-const updateProduct = async (req,res) =>
-
-{
-
-    try{
-
+const updateProduct = async (req, res) => {
+    try {
         const productData = {
             ...req.body,
             ownerid: req.user.userid,
@@ -100,66 +66,50 @@ const updateProduct = async (req,res) =>
             })
         };
 
-        const product= await ProductRepository.updateProduct(
+        const product = await ProductRepository.updateProduct(
             req.params.id,
             productData,
             req.user.userid
         );
 
         if (!product) {
-
             return res.status(404).json({
+                message: "Product not found",
                 error: "Product not found"
             });
-
         }
 
         res.status(200).json(product);
-
+    } catch (error) {
+        res.status(400).json({
+            message: error.message,
+            error: error.message
+        });
     }
-
-    catch(error){
-
-        res.status(400).json({error : error.message});
-
-    }
-
 };
 
-const deleteProduct = async (req,res) =>
-
-{
-
-    try{
-
+const deleteProduct = async (req, res) => {
+    try {
         const product = await ProductRepository.deleteProduct(req.params.id, req.user.userid);
-
         if (!product) {
-
             return res.status(404).json({
+                message: "Product not found",
                 error: "Product not found"
             });
-
         }
-
         res.status(200).json(product);
-
+    } catch (error) {
+        res.status(400).json({
+            message: error.message,
+            error: error.message
+        });
     }
-
-    catch(error){
-
-        res.status(400).json({error : error.message});
-
-    }
-
 };
 
 module.exports = {
-
     createProduct,
     getAllProducts,
     getProductById,
     updateProduct,
     deleteProduct
-
 };

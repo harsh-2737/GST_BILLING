@@ -62,7 +62,7 @@ export function downloadInvoicePdf(invoice, business = {}) {
   const businessName = business.businessName || invoice.user?.name || "Business";
   const lineItems = (invoice.items || []).map((item, index) => {
     const baseAmount = Number(item.price || 0) * Number(item.buyitem || 0);
-    const taxAmount = baseAmount * Number(item.gst?.gstrate || 0) / 100;
+    const taxAmount = (baseAmount * Number(item.gst?.gstrate || 0)) / 100;
     const cgstAmount = taxAmount / 2;
     const sgstAmount = taxAmount / 2;
 

@@ -113,13 +113,23 @@ const createPayment = async (paymentData) => {
     }
 };
 
-const getAllPayments = async () => {
+const getAllPayments = async (userId) => {
     try {
-        const paymentList =
-            await Payment.find();
+        if (!userId) {
+            const paymentList = await Payment.find();
+            return paymentList;
+        }
+
+        const userInvoices = await Invoice.find(
+            { "user.userid": Number(userId) },
+            { invoiceid: 1 }
+        );
+        const invoiceIds = userInvoices.map((inv) => inv.invoiceid);
+        const paymentList = await Payment.find({
+            invoiceid: { $in: invoiceIds }
+        });
 
         return paymentList;
-
     }
     catch (error) {
         throw new Error(

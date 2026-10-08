@@ -10,3 +10,7 @@ export async function readApiResponse(response) {
     return { message: `The server returned an invalid response (HTTP ${response.status}).` };
   }
 }
+
+export function authHeader(token) {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}

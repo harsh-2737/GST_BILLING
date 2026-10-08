@@ -51,12 +51,12 @@ const customerSchema = new mongoose.Schema(
             type: String,
             trim: true,
             uppercase: true,
-            minlength: [15, "GSTIN must be exactly 15 characters"],
-            maxlength: [15, "GSTIN must be exactly 15 characters"],
-            match: [
-                /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/,
-                "Please enter a valid GSTIN"
-            ]
+            validate: {
+                validator: function(v) {
+                    return !v || /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(v);
+                },
+                message: "Please enter a valid 15-character GSTIN"
+            }
         },
         address: {
             type: String,

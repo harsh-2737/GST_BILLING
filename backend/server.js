@@ -46,6 +46,15 @@ app.use((req, res, next) => {
     return next();
 });
 
+app.use((err, _req, res, _next) => {
+    console.error("Unhandled error:", err);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Internal server error",
+        error: err.message || "Internal server error"
+    });
+});
+
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
